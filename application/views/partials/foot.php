@@ -7,3 +7,4 @@
 	console.log('Script partial');
 </script>
 <script type="text/javascript" src="<?php echo base_url('assets/js/script.js'); ?>"></script>
+<script type="text/javascript" src="<?php echo base_url('assets/js/plugins/jquery-validation/dist/jquery.validate.min.js'); ?>"></script>

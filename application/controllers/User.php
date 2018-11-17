@@ -6,6 +6,7 @@ class User extends CI_Controller {
 	function __construct(){
 		parent::__construct();
 		$this->load->model('User_Model');
+		$this->load->model('Role_Model');
 
 		// $this->session->userdata('logged_in') == FALSE
 		if(!$this->session->userdata('logged_in')){
@@ -25,11 +26,17 @@ class User extends CI_Controller {
 	}
 
 	public function add(){
-		$this->load->view('user/form');
+		//get all role data
+		$data['role_data'] = $this->Role_Model->get_all()->result_array();
+
+		$this->load->view('user/form', $data);
 	}
 
 	public function update($id_user){
-		//ambil artikel by id, kemudian pakai row_array untuk fetch data nya
+		//get all role data
+		$data['role_data'] = $this->Role_Model->get_all()->result_array();
+
+		//ambil user by id, kemudian pakai row_array untuk fetch data nya
 		$data['user_data'] = $this->User_Model->get_by_id($id_user)->row_array();
 
 		$this->load->view('user/form', $data);
@@ -42,14 +49,20 @@ class User extends CI_Controller {
 
 		//proses pengecekan validasi
 		if($this->form_validation->run() == FALSE){
-			$this->load->view('user/form');
+			$result_json = array(
+				"status" => FALSE,
+				"message" => "Formulir tidak lengkap, silahkan isi kembali"
+			);
 		}else{
 			//get input form, key array tidak boleh asal, tp ikut ke field di table databasenya
 			$id_user = $this->input->post('id_user');
 			$data['nama_depan'] = $this->input->post('nama_depan');
 			$data['nama_belakang'] = $this->input->post('nama_belakang');
 			$data['username'] = $this->input->post('username');
+			$data['password'] = md5($this->input->post('password'));
+			$data['id_role'] = $this->input->post('id_role');
 
+			//condition insert/update
 			if(empty($id_user)){
 				//panggil insert function dari model
 				$result = $this->User_Model->insert($data);
@@ -60,12 +73,21 @@ class User extends CI_Controller {
 			
 
 			if($result){
-				//mengarahkan halaman ke fungsi yang diinginkan
-				redirect('user');
+				$result_json = array(
+					"status" => TRUE,
+					"message" => "Data berhasil disimpan."
+				);
 			}else{
-				echo "Gagal menyimpan data";
+				$result_json = array(
+					"status" => FALSE,
+					"message" => "Gagal menyimpan data."
+				);
 			}
 		}
+
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode($result_json));
 	}
 
 	public function delete($id_user){
